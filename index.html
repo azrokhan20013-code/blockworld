@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>VICE CITY STORIES</title>
+<style>
+*{box-sizing:border-box}html,body{margin:0;height:100%;overflow:hidden;background:#83c9e8;color:white;font-family:Arial}canvas{display:block}
+#hud{position:fixed;top:12px;left:12px;right:12px;display:flex;justify-content:space-between;pointer-events:none}
+.panel{background:#071421d9;border:1px solid #ff639688;border-radius:12px;padding:10px 13px;text-shadow:0 1px 3px #000}
+#logo{font-weight:900;letter-spacing:2px;color:#ff8bb2}#mission{position:fixed;top:76px;left:12px;background:#071421d9;border:1px solid #55dfff88;border-radius:10px;padding:10px;font-size:12px}
+#controls{position:fixed;bottom:20px;left:12px;right:12px;display:flex;justify-content:space-between;align-items:end}
+.pad{display:grid;grid-template-columns:48px 48px 48px;grid-template-rows:48px 48px;gap:5px}
+button{background:#071421d9;color:white;border:1px solid #ffffff88;border-radius:12px;font-weight:bold;font-size:17px;touch-action:none}
+.pad button{width:48px;height:48px}.pad #up{grid-column:2}.pad #left{grid-column:1;grid-row:2}.pad #down{grid-column:2;grid-row:2}.pad #right{grid-column:3;grid-row:2}
+.actions{display:flex;flex-direction:column;gap:7px}.actions button{width:78px;height:42px;font-size:11px}
+#hint{position:fixed;bottom:4px;left:50%;transform:translateX(-50%);font-size:10px;color:white;text-shadow:0 1px 4px black;white-space:nowrap}
+</style>
+</head>
+<body>
+<div id="hud"><div class="panel"><div id="logo">VICE CITY STORIES</div><small>SUNSET DISTRICT</small></div><div class="panel">CASH: $<span id="cash">0</span><br><span id="mode">ON FOOT</span></div></div>
+<div id="mission">MISSION 01<br><b>Explore Vice City</b><br>Collect the glowing coins.</div>
+<div id="controls"><div class="pad"><button id="up">▲</button><button id="left">◀</button><button id="down">▼</button><button id="right">▶</button></div><div class="actions"><button id="jump">JUMP</button><button id="enter">ENTER CAR</button><button id="gas">GAS ▲</button><button id="brake">BRAKE ▼</button></div></div>
+<div id="hint">Arrow buttons to move • Find a car and tap ENTER CAR</div>
+<script type="module">
+import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js';
+const scene=new THREE.Scene();scene.background=new THREE.Color(0x83c9e8);scene.fog=new THREE.Fog(0x83c9e8,90,260);
+const camera=new THREE.PerspectiveCamera(65,innerWidth/innerHeight,.1,500);
+const renderer=new THREE.WebGLRenderer({antialias:true});renderer.setSize(innerWidth,innerHeight);renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.1;document.body.appendChild(renderer.domElement);
+scene.add(new THREE.HemisphereLight(0xdaf4ff,0x55445c,2));const sun=new THREE.DirectionalLight(0xffe0b0,3);sun.position.set(-40,75,35);sun.castShadow=true;sun.shadow.mapSize.set(1024,1024);scene.add(sun);
+const material=(c,r=.8,m=0)=>new THREE.MeshStandardMaterial({color:c,roughness:r,metalness:m});
+function cube(w,h,d,c,x,y,z){let o=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),material(c));o.position.set(x,y,z);o.castShadow=true;o.receiveShadow=true;scene.add(o);return o}
+cube(500,.2,500,0x68a77c,0,-.15,0);let sea=new THREE.Mesh(new THREE.PlaneGeometry(500,100),material(0x1b9fbd,.25,.2));sea.rotation.x=-Math.PI/2;sea.position.set(0,-.05,-205);scene.add(sea);
+for(let i=-3;i<=3;i++){let z=i*42;cube(500,.1,13,0x303744,0,.02,z);for(let x=-240;x<250;x+=18)cube(7,.025,.18,0xf3d47b,x,.09,z);let x=i*48;cube(13,.1,500,0x303744,x,.02,0);for(let zz=-240;zz<250;zz+=18)cube(.18,.025,7,0xf3d47b,x,.09,zz)}
+const colors=[0xf0a5a5,0xf3d39b,0x9dcbd3,0xd5b4df,0xe8e2cf,0xefa86f];
+for(let gx=-5;gx<=5;gx++)for(let gz=-5;gz<=4;gz++){if(Math.abs(gx)<1&&Math.abs(gz)<1)continue;if(gz<-3&&gx>1)continue;let x=gx*48,z=gz*42,h=12+Math.random()*36,w=17+Math.random()*12,d=15+Math.random()*10;cube(w,h,d,colors[Math.floor(Math.random()*colors.length)],x,h/2,z);for(let yy=3;yy<h-2;yy+=4)for(let xx=-w/2+2;xx<w/2-1;xx+=4){let win=new THREE.Mesh(new THREE.BoxGeometry(1.5,2,.12),material(0x477b91,.3));win.position.set(x+xx,yy,z+d/2+.08);scene.add(win)}}
+function palm(x,z){let trunk=new THREE.Mesh(new THREE.CylinderGeometry(.3,.5,6,7),material(0x91613c));trunk.position.set(x,3,z);scene.add(trunk);for(let i=0;i<6;i++){let leaf=new THREE.Mesh(new THREE.ConeGeometry(.45,4,5),material(0x21835b));leaf.position.set(x+Math.cos(i)*1.7,6,z+Math.sin(i)*1.7);leaf.rotation.z=1.2;scene.add(leaf)}}
+for(let i=0;i<36;i++){let x=(Math.random()-.5)*420,z=(Math.random()-.5)*350;if(Math.abs(x%48)>10&&Math.abs(z%42)>9)palm(x,z)}
+const player=new THREE.Group();scene.add(player);let torso=new THREE.Mesh(new THREE.CapsuleGeometry(.48,.85,4,8),material(0x273d71));torso.position.y=1.1;torso.castShadow=true;player.add(torso);let head=new THREE.Mesh(new THREE.SphereGeometry(.32,16,12),material(0xc98d69));head.position.y=1.95;player.add(head);
+const cars=[];function car(x,z,color){let g=new THREE.Group();scene.add(g);let body=new THREE.Mesh(new THREE.BoxGeometry(4,1,2),material(color,.3,.3));body.position.y=.8;g.add(body);let cabin=new THREE.Mesh(new THREE.BoxGeometry(2,.8,1.65),material(0x31586b,.2,.2));cabin.position.set(-.2,1.55,0);g.add(cabin);for(let a of [-1.3,1.3])for(let b of [-1,1]){let w=new THREE.Mesh(new THREE.CylinderGeometry(.43,.43,.25,16),material(0x15191f));w.rotation.x=Math.PI/2;w.position.set(a,.45,b);g.add(w)}g.position.set(x,0,z);cars.push(g)}
+car(8,5,0xe64b6b);car(-14,45,0x36a8c7);car(95,-35,0xf0c34e);car(-90,85,0xeeeeee);
+const coins=[];for(let i=0;i<15;i++){let m=new THREE.Mesh(new THREE.TorusGeometry(.65,.18,8,16),new THREE.MeshStandardMaterial({color:0xffd84a,emissive:0x8a5700}));m.position.set((Math.random()-.5)*180,1.5,(Math.random()-.5)*180);scene.add(m);coins.push(m)}
+let keys={},cash=0,driving=false,activeCar=null,speed=0,vertical=0;const bind=(id,k)=>{let b=document.getElementById(id);b.addEventListener('pointerdown',e=>{e.preventDefault();keys[k]=true});for(let ev of ['pointerup','pointercancel','pointerleave'])b.addEventListener(ev,()=>keys[k]=false)};
+bind('up','forward');bind('down','back');bind('left','left');bind('right','right');bind('gas','forward');bind('brake','back');document.addEventListener('keydown',e=>{keys[e.key.toLowerCase()]=true});document.addEventListener('keyup',e=>{keys[e.key.toLowerCase()]=false});
+document.getElementById('jump').onclick=()=>{if(!driving&&player.position.y<.05)vertical=7};
+document.getElementById('enter').onclick=()=>{if(!driving){let nearest=cars.sort((a,b)=>a.position.distanceTo(player.position)-b.position.distanceTo(player.position))[0];if(nearest&&nearest.position.distanceTo(player.position)<12){activeCar=nearest;driving=true;document.getElementById('mode').textContent='DRIVING'}}else{driving=false;player.position.copy(activeCar.position);player.position.x+=4;activeCar=null;speed=0;document.getElementById('mode').textContent='ON FOOT'}};
+const clock=new THREE.Clock();function animate(){requestAnimationFrame(animate);let dt=Math.min(clock.getDelta(),.04);let forward=keys.forward||keys.w||keys.arrowup,back=keys.back||keys.s||keys.arrowdown,left=keys.left||keys.a||keys.arrowleft,right=keys.right||keys.d||keys.arrowright;
+if(driving&&activeCar){if(forward)speed=Math.min(speed+18*dt,24);else if(back)speed=Math.max(speed-22*dt,-8);else speed*=.97;if(left)activeCar.rotation.y+=dt*1.6*(speed>=0?1:-1);if(right)activeCar.rotation.y-=dt*1.6*(speed>=0?1:-1);activeCar.translateZ(-speed*dt);camera.position.lerp(new THREE.Vector3(activeCar.position.x+Math.sin(activeCar.rotation.y)*10,activeCar.position.y+8,activeCar.position.z+Math.cos(activeCar.rotation.y)*10),.08);camera.lookAt(activeCar.position.x,1,activeCar.position.z)}
+else{let move=new THREE.Vector3();if(forward)move.z-=1;if(back)move.z+=1;if(left)move.x-=1;if(right)move.x+=1;if(move.length())move.normalize().multiplyScalar(12*dt);player.position.add(move);if(move.length())player.rotation.y=Math.atan2(move.x,move.z);vertical-=18*dt;player.position.y=Math.max(0,player.position.y+vertical*dt);if(player.position.y===0)vertical=0;let target=new THREE.Vector3(player.position.x+9,7,player.position.z+12);camera.position.lerp(target,.08);camera.lookAt(player.position.x,1,player.position.z)}
+let p=driving?activeCar.position:player.position;for(let c of coins){c.rotation.y+=dt*2;c.position.y=1.5+Math.sin(clock.elapsedTime*2+c.position.x)*.2;if(c.visible&&c.position.distanceTo(p)<3){c.visible=false;cash+=100;document.getElementById('cash').textContent=cash}}
+renderer.render(scene,camera)}
+camera.position.set(9,7,12);camera.lookAt(0,1,0);animate();
+addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight)});
+</script></body></html>
